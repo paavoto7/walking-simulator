@@ -136,13 +136,6 @@ int main() {
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window, visibility);
-		shaderProgram.setFloat("visibility", visibility);
-
-		glm::mat4 trans(1.0f);
-		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-		trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-		unsigned int transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -152,9 +145,24 @@ int main() {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
+		glm::mat4 trans(1.0f);
+		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+		trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		glm::mat4 trans2(1.0f);
+		trans2 = glm::translate(trans2, glm::vec3(-0.5f, 0.5f, 0.0f));
+		float timescale{ abs(static_cast<float>(glm::sin(glfwGetTime()))) };
+		trans2 = glm::scale(trans2, glm::vec3(timescale, timescale, timescale));
+
 		shaderProgram.use();
 		glBindVertexArray(VAO);
+		shaderProgram.setFloat("visibility", visibility);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		shaderProgram.setMat4("transform", trans);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		shaderProgram.setMat4("transform", trans2);
+		
+		
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

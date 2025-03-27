@@ -49,18 +49,20 @@ public:
 		vertex = glCreateShader(GL_VERTEX_SHADER);
 		glShaderSource(vertex, 1, &vShaderCode, NULL);
 		glCompileShader(vertex);
+		checkCompileError(vertex, "VERTEX");
 
 		// fragment Shader
 		fragment = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(fragment, 1, &fShaderCode, NULL);
 		glCompileShader(fragment);
+		checkCompileError(fragment, "FRAGMENT");
 
 		// shader Program
 		ID = glCreateProgram();
 		glAttachShader(ID, vertex);
 		glAttachShader(ID, fragment);
 		glLinkProgram(ID);
-		
+		checkCompileError(ID, "PROGRAM");
 
 		// delete the shaders as they're linked into our program now and no longer necessary
 		glDeleteShader(vertex);

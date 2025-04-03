@@ -10,14 +10,19 @@ enum Camera_Movement {
     FORWARD,
     BACKWARD,
     LEFT,
-    RIGHT
+    RIGHT,
+    SPACE
 };
 
 const float YAW{ -90.0f };
 const float PITCH{};
-const float SPEED{ 2.5f };
+const float SPEED{ 20.5f };
 const float SENSITIVITY{ 0.1f };
 const float ZOOM{ 45.0f };
+const bool flyingCamera{ false };
+const float CHARACTERHEIGHT{ 4.0f };
+const float GRAVITY{ 20.0f };
+const float JUMPHEIGHT{ 6.0f };
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
 class Camera
@@ -37,6 +42,9 @@ public:
     float MouseSensitivity;
     float Zoom;
 
+    float characterHeight;
+    float terrainLevel;
+
     // constructor with vectors
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
@@ -44,6 +52,9 @@ public:
         WorldUp = up;
         Yaw = yaw;
         Pitch = pitch;
+        terrainLevel = 0.0f;
+        characterHeight = CHARACTERHEIGHT;
+        jumpShift = JUMPHEIGHT;
         updateCameraVectors();
     }
     // constructor with scalar values
@@ -53,6 +64,9 @@ public:
         WorldUp = glm::vec3(upX, upY, upZ);
         Yaw = yaw;
         Pitch = pitch;
+        terrainLevel = 0.0f;
+        characterHeight = CHARACTERHEIGHT;
+        jumpShift = JUMPHEIGHT;
         updateCameraVectors();
     }
 
@@ -74,7 +88,11 @@ public:
             Position -= Right * velocity;
         if (direction == RIGHT)
             Position += Right * velocity;
-        Position.y = 0.0f;
+        if (direction == SPACE && !isJumping) {
+            jumpShift = JUMPHEIGHT;
+            isJumping = true;
+            Position.y += jumpShift * 1.2 * deltaTime;
+        }
     }
 
     // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -109,7 +127,14 @@ public:
             Zoom = 45.0f;
     }
 
+    void update(float deltatime) {
+        updateJump(deltatime);
+    }
+
 private:
+    float jumpShift{ 0.4f };
+    bool isJumping{ false };
+
     // calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors()
     {
@@ -122,6 +147,19 @@ private:
         // also re-calculate the Right and Up vector
         Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         Up = glm::normalize(glm::cross(Right, Front));
+    }
+
+    void updateJump(float deltatime) {
+        if (isJumping) {
+            if (Position.y <= terrainLevel + characterHeight) {
+                isJumping = false;
+            }
+            else {
+                Position.y += jumpShift * deltatime;
+                jumpShift -= GRAVITY * deltatime;
+            }
+        }
+        if (!flyingCamera && !isJumping) Position.y = terrainLevel + characterHeight;
     }
 };
 

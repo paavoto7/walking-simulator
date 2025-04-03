@@ -404,3 +404,4 @@ exercises/
 *.jpg
 *.jpeg
 stb_image.h
+glad.c

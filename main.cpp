@@ -19,15 +19,14 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-vector<float>& readHeightMap();
+inline void terrainHeight(const vector<float>& vertices, float width, float height);
 
-constexpr int WIDTH{ 800 };
-constexpr int HEIGHT{ 600 };
+constexpr int WIDTH{ 1920 };
+constexpr int HEIGHT{ 1080 };
 
 //Camera camera(glm::vec3(0.0f, 100.0f, 3.0f));
-Camera camera(glm::vec3(67.0f, 627.5f, 169.9f),
-	glm::vec3(0.0f, 1.0f, 0.0f),
-	-128.1f, -42.4f);
+Camera camera(glm::vec3(67.0f, 227.5f, 169.9f));
+
 float lastX{ WIDTH / 2 };
 float lastY{ HEIGHT / 2 };
 bool firstMouse{ true };
@@ -37,7 +36,7 @@ float lastFrame{};
 
 float visibility{ 0.2f };
 
-constexpr float vertices[] = {
+constexpr float cubeVertices[] = {
 	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
 	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -139,7 +138,7 @@ int main() {
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -176,7 +175,6 @@ int main() {
 		std::cout << "Failed to load texture" << std::endl;
 	}
 
-	vector<vector<int>> heightMapVec(height, vector<int>(width, 0));
 	vector<float> vertices;
 
 	const float yScale{ 64.0f / 256.0f };
@@ -187,9 +185,9 @@ int main() {
 
 			unsigned char y = *texel; // Just dereference i.e. *texel
 
-			vertices.push_back(-height / 2.0f + i);
-			vertices.push_back(static_cast<int>(y) * yScale - yShift);
-			vertices.push_back(-width / 2.0f + j);
+			vertices.push_back(-height / 2.0f + i); // x
+			vertices.push_back(static_cast<int>(y) * yScale - yShift); // y
+			vertices.push_back(-width / 2.0f + j); // z
 		}
 	}
 
@@ -282,6 +280,9 @@ int main() {
 	shaderProgram.setFloat("visibility", visibility);
 	glEnable(GL_DEPTH_TEST);
 
+	terrainHeight(vertices, width, height);
+	camera.Position.y = camera.terrainLevel + camera.characterHeight;
+
 	while (!glfwWindowShouldClose(window)) {
 		float currentFrame{ static_cast<float>(glfwGetTime()) };
 		deltaTime = currentFrame - lastFrame;
@@ -299,7 +300,7 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
 		glm::mat4 view{ camera.GetViewMatrix() };
-		glm::mat4 projection{ glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 100000.0f)};
+		glm::mat4 projection{ glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 1000.0f)};
 		
 		shaderProgram.use();
 		glBindVertexArray(VAO);
@@ -323,15 +324,22 @@ int main() {
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		*/
 
+		terrainHeight(vertices, width, height);
+
 		terrainShaderProgram.use();
 		shaderProgram.setMat4("view", view);
 		shaderProgram.setMat4("projection", projection);
 		glBindVertexArray(groundVAO);
 		model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(0.5f, 0.5f, -2.0f));
+		//model = glm::scale(model, glm::vec3(1.0f, 2.0f, 1.0f));
 		terrainShaderProgram.setMat4("model", model);
 		for (unsigned strip = 0; strip < NUM_STRIPS; ++strip) {
-			glDrawElements(GL_TRIANGLE_STRIP, NUM_VERTS_PER_STRIP, GL_UNSIGNED_INT, (void*)(sizeof(unsigned) * NUM_VERTS_PER_STRIP * strip));
+			glDrawElements(
+				GL_TRIANGLE_STRIP,
+				NUM_VERTS_PER_STRIP,
+				GL_UNSIGNED_INT,
+				(void*)(sizeof(unsigned) * NUM_VERTS_PER_STRIP * strip)
+			);
 		}
 
 		/*
@@ -342,6 +350,7 @@ int main() {
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 		*/
+		camera.update(deltaTime);
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -384,6 +393,10 @@ void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		camera.ProcessKeyboard(SPACE, deltaTime);
+	}
+
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -412,10 +425,9 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-/*
-vector<float>& readHeightMap() {
-
-	
-	return vector<float>{};
+inline void terrainHeight(const vector<float>& vertices, float width, float height) {
+	glm::vec3 camPos{ camera.Position };
+	int vertX{ static_cast<int>(camPos.x + height / 2.0f) };
+	int vertZ{ static_cast<int>(camPos.z + width / 2.0f) };
+	camera.terrainLevel = vertices[(vertX * width + vertZ) * 3 + 1];
 }
-*/

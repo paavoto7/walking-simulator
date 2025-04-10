@@ -154,8 +154,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
-    <ClInclude Include="mesh.h" />
     <ClInclude Include="shader.h" />
+    <ClInclude Include="terrain.h" />
+    <ClInclude Include="texture.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment.glsl" />

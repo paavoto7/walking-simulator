@@ -104,7 +104,7 @@ int main() {
 	if (window == nullptr) {
 		cout << "Failed to create GLFW window" << endl;
 		glfwTerminate();
-		return -1;
+		return 1;
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -114,46 +114,21 @@ int main() {
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		cout << "Failed to initialise GLAD" << endl;
-		return -1;
+		return 1;
 	}
 
 	Shader shaderProgram("./shaders/vertex.glsl", "./shaders/fragment.glsl");
 	Shader terrainShaderProgram("./shaders/terrainVertex.glsl", "./shaders/terrainFragment.glsl");
 
-	GLuint VBO[2], VAO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(2, VBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(groundVertices), groundVertices, GL_STATIC_DRAW);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(groundVertices), groundVertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(2);
-
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
-	glEnableVertexAttribArray(3);
-
-	glBindVertexArray(0);
+	cout << "Shaders initialised" << endl;
 
 	Terrain terrain;
 	terrain.init();
 
 	Texture texture1("assets/container.jpg");
 	Texture texture2("assets/awesomeface.png");
+
+	cout << "Textures initialised" << endl;
 
 	shaderProgram.use();
 	shaderProgram.setInt("texture1", 0);
@@ -178,28 +153,17 @@ int main() {
 		texture1.bind(GL_TEXTURE0);
 		texture2.bind(GL_TEXTURE1);
 
+		// shaderProgram.use();
+
 		glm::mat4 view{ camera.GetViewMatrix() };
 		glm::mat4 projection{ glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 1000.0f)};
+		glm::mat4 model(1.0f);
 		
-		shaderProgram.use();
-		glBindVertexArray(VAO);
-		
-		shaderProgram.setMat4("view", view);
-		shaderProgram.setMat4("projection", projection);
-		shaderProgram.setFloat("visibility", visibility);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-		glm::mat4 model{ glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,  0.0f,  0.0f)) };
-		model = glm::rotate(model, glm::radians(20.0f), glm::vec3(1.0f, 0.3f, 0.5f));
-		shaderProgram.setMat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
 		terrainHeight(terrain.vertices, terrain.width, terrain.height);
 
 		terrainShaderProgram.use();
-		shaderProgram.setMat4("view", view);
-		shaderProgram.setMat4("projection", projection);
-		model = glm::mat4(1.0f);
+		terrainShaderProgram.setMat4("view", view);
+		terrainShaderProgram.setMat4("projection", projection);
 		//model = glm::scale(model, glm::vec3(1.0f, 2.0f, 1.0f));
 		terrainShaderProgram.setMat4("model", model);
 
@@ -210,9 +174,6 @@ int main() {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, VBO);
 	
 	glDeleteProgram(shaderProgram.ID);
 	glDeleteProgram(terrainShaderProgram.ID);

@@ -154,6 +154,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="environment_object.h" />
+    <ClInclude Include="game_object.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="terrain.h" />
     <ClInclude Include="texture.h" />

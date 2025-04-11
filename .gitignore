@@ -405,3 +405,4 @@ exercises/
 *.jpeg
 stb_image.h
 glad.c
+random.txt

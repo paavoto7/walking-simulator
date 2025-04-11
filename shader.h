@@ -13,7 +13,7 @@
 class Shader
 {
 public:
-	unsigned int ID;
+	GLuint ID;
 
 	Shader(const char* vertexPath, const char* fragmentPath) {
 		std::string vertexCode;
@@ -44,7 +44,7 @@ public:
 		const char* vShaderCode = vertexCode.c_str();
 		const char* fShaderCode = fragmentCode.c_str();
 
-		unsigned int vertex, fragment;
+		GLuint vertex, fragment;
 
 		vertex = glCreateShader(GL_VERTEX_SHADER);
 		glShaderSource(vertex, 1, &vShaderCode, nullptr);
@@ -69,7 +69,12 @@ public:
 		glDeleteShader(fragment);
 	}
 
-	void use() {
+	~Shader() {
+		glDeleteProgram(ID);
+		std::cout << "Deleted shader of ID: " << static_cast<int>(ID) << std::endl;
+	}
+
+	void use() const {
 		glUseProgram(ID);
 	}
 
@@ -121,7 +126,7 @@ public:
 		glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 	}
 private:
-	void checkCompileError(unsigned int shader, const std::string &type) {
+	void checkCompileError(GLuint shader, const std::string &type) {
 		int success;
 		char infoLog[1024];
 

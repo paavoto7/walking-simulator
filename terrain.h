@@ -6,9 +6,10 @@
 #include <GLFW/glfw3.h>
 
 #include "stb_image.h"
+#include "game_object.h"
 #include "shader.h"
 
-class Terrain {
+class Terrain: public GameObject {
 public:
 	int width, height, nrChannels;
 	GLuint groundVBO;
@@ -25,7 +26,7 @@ public:
 		glDeleteBuffers(1, &groundEBO);
 	}
 
-	void draw() const {
+	void draw() override {
 		glBindVertexArray(groundVAO);
 		
 		for (unsigned strip = 0; strip < NUM_STRIPS; ++strip) {
@@ -38,7 +39,7 @@ public:
 		}
 	}
 
-	void init() {
+	void init() override {
 		stbi_set_flip_vertically_on_load(true);
 
 		unsigned char* heightMapData{ stbi_load("assets/heightMap.png", &width, &height, &nrChannels, 0) };

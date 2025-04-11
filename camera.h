@@ -24,9 +24,7 @@ const float CHARACTERHEIGHT{ 4.0f };
 const float GRAVITY{ 20.0f };
 const float JUMPHEIGHT{ 6.0f };
 
-// An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
-class Camera
-{
+class Camera {
 public:
     // camera Attributes
     glm::vec3 Position;
@@ -34,9 +32,11 @@ public:
     glm::vec3 Up;
     glm::vec3 Right;
     glm::vec3 WorldUp;
-    // euler Angles
+
+    // Euler Angles
     float Yaw;
     float Pitch;
+
     // camera options
     float MovementSpeed;
     float MouseSensitivity;
@@ -46,8 +46,8 @@ public:
     float terrainLevel;
 
     // constructor with vectors
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
-    {
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH)
+    : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
         Position = position;
         WorldUp = up;
         Yaw = yaw;
@@ -58,8 +58,8 @@ public:
         updateCameraVectors();
     }
     // constructor with scalar values
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
-    {
+    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
+    : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
         Position = glm::vec3(posX, posY, posZ);
         WorldUp = glm::vec3(upX, upY, upZ);
         Yaw = yaw;
@@ -71,23 +71,28 @@ public:
     }
 
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
-    glm::mat4 GetViewMatrix()
-    {
+    glm::mat4 GetViewMatrix() const {
         return glm::lookAt(Position, Position + Front, Up);
     }
 
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-    void ProcessKeyboard(Camera_Movement direction, float deltaTime)
-    {
+    void ProcessKeyboard(Camera_Movement direction, float deltaTime) {
+        glm::vec3 movementVector(0.0f);
+        if (direction == FORWARD) {
+            movementVector += Front;
+        }
+        if (direction == BACKWARD) {
+            movementVector -= Front;
+        }
+        if (direction == LEFT) {
+            movementVector -= Right;
+        }
+        if (direction == RIGHT) {
+            movementVector += Right;
+        }
         float velocity{ MovementSpeed * deltaTime };
-        if (direction == FORWARD)
-            Position += Front * velocity;
-        if (direction == BACKWARD)
-            Position -= Front * velocity;
-        if (direction == LEFT)
-            Position -= Right * velocity;
-        if (direction == RIGHT)
-            Position += Right * velocity;
+        Position += movementVector * velocity;
+
         if (direction == SPACE && !isJumping) {
             jumpShift = JUMPHEIGHT;
             isJumping = true;
@@ -96,8 +101,7 @@ public:
     }
 
     // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
-    {
+    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true) {
         xoffset *= MouseSensitivity;
         yoffset *= MouseSensitivity;
 
@@ -105,8 +109,7 @@ public:
         Pitch += yoffset;
 
         // make sure that when pitch is out of bounds, screen doesn't get flipped
-        if (constrainPitch)
-        {
+        if (constrainPitch) {
             if (Pitch > 89.0f)
                 Pitch = 89.0f;
             else if (Pitch < -89.0f)
@@ -118,8 +121,7 @@ public:
     }
 
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-    void ProcessMouseScroll(float yoffset)
-    {
+    void ProcessMouseScroll(float yoffset) {
         Zoom -= yoffset;
         if (Zoom < 1.0f)
             Zoom = 1.0f;
@@ -127,8 +129,14 @@ public:
             Zoom = 45.0f;
     }
 
+    // Method for per-frame updations
     void update(float deltatime) {
-        updateJump(deltatime);
+        if (isJumping) {
+            updateJump(deltatime);
+        } else if (!flyingCamera) {
+            // Set the camera to a fixed height from the ground
+            Position.y = terrainLevel + characterHeight;
+        }
     }
 
 private:
@@ -149,17 +157,15 @@ private:
         Up = glm::normalize(glm::cross(Right, Front));
     }
 
+    // Update the jump
     void updateJump(float deltatime) {
-        if (isJumping) {
-            if (Position.y <= terrainLevel + characterHeight) {
-                isJumping = false;
-            }
-            else {
-                Position.y += jumpShift * deltatime;
-                jumpShift -= GRAVITY * deltatime;
-            }
+        if (Position.y <= terrainLevel + characterHeight) {
+            isJumping = false;
+            Position.y = terrainLevel + characterHeight;
+        } else {
+            Position.y += jumpShift * deltatime;
+            jumpShift -= GRAVITY * deltatime;
         }
-        if (!flyingCamera && !isJumping) Position.y = terrainLevel + characterHeight;
     }
 };
 

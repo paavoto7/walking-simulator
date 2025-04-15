@@ -22,7 +22,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{7c2c684a-8994-4b95-a744-79dfb6b0dc1b}</ProjectGuid>
-    <RootNamespace>learnopengl</RootNamespace>
+    <RootNamespace>walking-simulator</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>walking-simulator</ProjectName>
   </PropertyGroup>
@@ -156,6 +156,8 @@
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\environment_object.h" />
     <ClInclude Include="src\game_object.h" />
+    <ClInclude Include="src\mesh.h" />
+    <ClInclude Include="src\model.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\terrain.h" />
     <ClInclude Include="src\texture.h" />

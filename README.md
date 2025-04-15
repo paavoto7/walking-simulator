@@ -16,3 +16,9 @@ The features are still very rudimentary, but I hope I can make a nice little wal
 - Git
 - Cmake
 - Visual Studio 2022
+
+### Changes to be made
+1. Seperate the code from h files to cpp source files
+1. Import a model succesfully
+1. Implement a skybox
+1. Implement some kind of water

@@ -1,4 +1,3 @@
-#include <array>
 #include <vector>
 
 #include <glad/glad.h>
@@ -13,6 +12,10 @@
 #include "terrain.h"
 #include "texture.h"
 #include "model.h"
+#include "game_object.h"
+#include "water.h"
+#include "skybox.h"
+
 using namespace std;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -37,64 +40,6 @@ bool firstMouse{ true };
 
 float deltaTime{};
 float lastFrame{};
-
-float visibility{ 0.2f };
-
-constexpr float cubeVertices[] = {
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-};
-
-float groundVertices[] = {
-	// First Triangle
-	-1.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-	 1.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-	 1.0f,  0.0f,  1.0f,  1.0f, 1.0f,
-
-	 // Second Triangle
-	 -1.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-	  1.0f,  0.0f,  1.0f,  1.0f, 1.0f,
-	 -1.0f,  0.0f,  1.0f,  0.0f, 1.0f
-};
 
 int main() {
 	glfwInit();
@@ -121,11 +66,35 @@ int main() {
 
 	Shader shaderProgram("./shaders/vertex.glsl", "./shaders/fragment.glsl");
 	Shader terrainShaderProgram("./shaders/terrainVertex.glsl", "./shaders/terrainFragment.glsl");
-
+	Shader skyboxShaderProgram("./shaders/skyboxVertex.glsl", "./shaders/skyboxFragment.glsl");
 	cout << "Shaders initialised" << endl;
 
-	Terrain terrain;
-	terrain.init();
+	// Easily draw/render the objects
+	vector<shared_ptr<GameObject>> drawables;
+
+	shared_ptr<Terrain> terrain = make_shared<Terrain>();
+	drawables.push_back(terrain);
+
+	const float halfWidth{ terrain->width / 2.0f };
+	const float halfHeight{ terrain->height / 2.0f };
+
+	// First version of static and plain water
+	const std::vector<float> waterVertices = {
+		// First Triangle
+		-halfWidth, 0.0f, -halfHeight,  0.0f, 0.0f,
+		 halfWidth, 0.0f, -halfHeight,  1.0f, 0.0f,
+		 halfWidth, 0.0f,  halfHeight,  1.0f, 1.0f,
+
+		 // Second Triangle
+		 -halfWidth, 0.0f, -halfHeight,  0.0f, 0.0f,
+		  halfWidth, 0.0f,  halfHeight,  1.0f, 1.0f,
+		 -halfWidth, 0.0f,  halfHeight,  0.0f, 1.0f
+	};
+
+	shared_ptr<Water> water = make_shared<Water>(waterVertices);
+	drawables.push_back(water);
+
+	SkyBox skyBox(skyboxShaderProgram, "assets/gloomySkybox/", "png");
 
 	Texture texture1("assets/container.jpg");
 	Texture texture2("assets/awesomeface.png");
@@ -135,10 +104,16 @@ int main() {
 	shaderProgram.use();
 	shaderProgram.setInt("texture1", 0);
 	shaderProgram.setInt("texture2", 1);
-	shaderProgram.setFloat("visibility", visibility);
-	glEnable(GL_DEPTH_TEST);
 
-	terrainHeight(terrain.vertices, terrain.width, terrain.height);
+	skyboxShaderProgram.use();
+	skyboxShaderProgram.setInt("skybox", 0);
+
+	glEnable(GL_DEPTH_TEST);
+	// Allow transparency
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	terrainHeight(terrain->vertices, terrain->width, terrain->height);
 	camera.Position.y = camera.terrainLevel + camera.characterHeight;
 
 	while (!glfwWindowShouldClose(window)) {
@@ -148,7 +123,7 @@ int main() {
 
 		processInput(window);
 
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.5f, 0.5f, 0.55f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -161,7 +136,7 @@ int main() {
 		glm::mat4 projection{ glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 1000.0f)};
 		glm::mat4 model(1.0f);
 		
-		terrainHeight(terrain.vertices, terrain.width, terrain.height);
+		terrainHeight(terrain->vertices, terrain->width, terrain->height);
 
 		terrainShaderProgram.use();
 		terrainShaderProgram.setMat4("view", view);
@@ -169,7 +144,17 @@ int main() {
 		//model = glm::scale(model, glm::vec3(1.0f, 2.0f, 1.0f));
 		terrainShaderProgram.setMat4("model", model);
 
-		terrain.draw();
+		// I may have to rethink this when more shaders accumulate...
+		for (const auto& game_object: drawables) {
+			game_object->draw();
+		}
+
+		skyboxShaderProgram.use();
+		skyboxShaderProgram.setMat4("projection", projection);
+		// Remove the translation effect so that the skybox is always around camera/player
+		skyboxShaderProgram.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix())));
+
+		skyBox.draw();
 
 		camera.update(deltaTime);
 		
@@ -179,6 +164,7 @@ int main() {
 	
 	glDeleteProgram(shaderProgram.ID);
 	glDeleteProgram(terrainShaderProgram.ID);
+	glDeleteProgram(skyboxShaderProgram.ID);
 
 	cout << "Reached the end" << endl;
 

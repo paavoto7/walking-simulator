@@ -11,23 +11,25 @@
 #include "mesh.h"
 #include "texture.h"
 #include "shader.h"
+#include "game_object.h"
 
 // Class for the models loaded with Assimp
-class Model {
+class Model: public GameObject {
 public:
 	std::vector<Texture> loadedTextures;
 
-	Model(const char* path) {
+	Model(const char* path, Shader& shader): shader(shader) {
 		loadModel(path);
 	}
 
-	void draw(const Shader& shader) {
+	void draw() override {
 		for (auto& mesh: meshes) {
 			mesh.draw(shader);
 		}
 	}
 
 private:
+	Shader& shader; // Main function is the owner as of now
 	std::vector<Mesh> meshes;
 	std::string directory;
 

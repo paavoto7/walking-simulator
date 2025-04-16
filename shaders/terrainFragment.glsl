@@ -13,7 +13,7 @@ vec3 determineColour() {
 	//float intensity = clamp((Height + 16.0) / 32.0, 0.0, 1.0);
 	float intensity = smoothstep(-16.0, 30.0, Height);
 
-	if (Height < 0.0) {
+	if (Height <= 0.0) {
 		return waterColour*intensity;
 	} else if (Height < 10.0) {
 		return grassColour*intensity*1.2;
@@ -30,5 +30,6 @@ vec3 determineColour() {
 
 void main() {
 	vec3 h = determineColour();
-	FragColor = vec4(h, 1.0);
+	float alpha = Height == 0.0 ? 0.9 : 1.0;
+	FragColor = vec4(h, alpha);
 }

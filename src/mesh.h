@@ -10,6 +10,7 @@
 #include "shader.h"
 #include "texture.h"
 
+// Collect all data of a single vertex
 struct Vertex {
 	glm::vec3 Position;
 	glm::vec3 Normal;

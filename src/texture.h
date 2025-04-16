@@ -15,11 +15,11 @@ public:
 	std::string type;
 	std::string path;
 	
-	Texture(const char* filename) {
+	Texture(const char* filename, GLenum textureType = GL_TEXTURE_2D): textureType(textureType) {
 		stbi_set_flip_vertically_on_load(true);
 
 		glGenTextures(1, &id);
-		glBindTexture(GL_TEXTURE_2D, id);
+		glBindTexture(textureType, id);
 
 		unsigned char* data{ stbi_load(filename, &texWidth, &texHeight, &texNrChannels, 0) };
 		if (data) {
@@ -35,13 +35,13 @@ public:
 				return;
 			}
 
-			glTexImage2D(GL_TEXTURE_2D, 0, format, texWidth, texHeight, 0, format, GL_UNSIGNED_BYTE, data);
-			glGenerateMipmap(GL_TEXTURE_2D);
+			glTexImage2D(textureType, 0, format, texWidth, texHeight, 0, format, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(textureType);
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(textureType, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(textureType, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		} else {
 			std::cout << "Failed to load texture!" << std::endl;
@@ -60,15 +60,16 @@ public:
 
 	void bind(GLenum option) const {
 		glActiveTexture(option);
-		glBindTexture(GL_TEXTURE_2D, id);
+		glBindTexture(textureType, id);
 	}
 
 	void unBind() const {
-		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindTexture(textureType, 0);
 	}
 
 private:
 	GLuint id;
+	GLenum textureType;
 	int texWidth, texHeight, texNrChannels;
 };
 

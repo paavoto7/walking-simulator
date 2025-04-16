@@ -2,6 +2,7 @@
 #define TERRAIN_H
 
 #include <vector>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -12,13 +13,29 @@
 class Terrain: public GameObject {
 public:
 	int width, height, nrChannels;
-	GLuint groundVBO;
-	GLuint groundVAO;
-	GLuint groundEBO;
-
 	std::vector<float> vertices;
 
-	Terrain() {}
+	Terrain() {
+		loadHeightMap();
+		if (vertices.empty()) return;
+
+		glGenVertexArrays(1, &groundVAO);
+		glGenBuffers(1, &groundVBO);
+		glGenBuffers(1, &groundEBO);
+
+		glBindVertexArray(groundVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, groundEBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned) * indices.size(), indices.data(), GL_STATIC_DRAW);
+
+		glBindVertexArray(0);
+	}
 
 	~Terrain() {
 		glDeleteVertexArrays(1, &groundVAO);
@@ -28,7 +45,6 @@ public:
 
 	void draw() override {
 		glBindVertexArray(groundVAO);
-		
 		for (unsigned strip = 0; strip < NUM_STRIPS; ++strip) {
 			glDrawElements(
 				GL_TRIANGLE_STRIP,
@@ -39,7 +55,7 @@ public:
 		}
 	}
 
-	void init() override {
+	void loadHeightMap() {
 		stbi_set_flip_vertically_on_load(true);
 
 		unsigned char* heightMapData{ stbi_load("assets/heightMap.png", &width, &height, &nrChannels, 0) };
@@ -47,7 +63,7 @@ public:
 		if (heightMapData) {
 			std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
 		} else {
-			std::cout << "Failed to load texture" << std::endl;
+			std::cout << "Failed to load heightmap" << std::endl;
 			return;
 		}
 		
@@ -77,32 +93,18 @@ public:
 				}
 			}
 		}
-
-		// Here starts the heightmap terrain
-
-		glGenVertexArrays(1, &groundVAO);
-		glGenBuffers(1, &groundVBO);
-		glGenBuffers(1, &groundEBO);
-
-		glBindVertexArray(groundVAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-		glEnableVertexAttribArray(0);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, groundEBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned) * indices.size(), indices.data(), GL_STATIC_DRAW);
-
-		glBindVertexArray(0);
 	}
 
 private:
+	GLuint groundVBO;
+	GLuint groundVAO;
+	GLuint groundEBO;
+
 	unsigned NUM_STRIPS{};
 	unsigned NUM_VERTS_PER_STRIP{};
 	const float yScale{ 64.0f / 256.0f };
 	const float yShift{ 16.0f };
+
 	std::vector<unsigned> indices;
 };
 

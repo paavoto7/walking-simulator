@@ -407,3 +407,4 @@ stb_image.h
 glad.c
 random.txt
 *.dll
+assets/

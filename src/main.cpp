@@ -26,7 +26,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-inline void terrainHeight(const vector<float>& vertices, float width, float height);
+inline float terrainHeight(const vector<float>& vertices, float width, float height, const glm::vec3& position);
 
 constexpr int WIDTH{ 1920 };
 constexpr int HEIGHT{ 1080 };
@@ -96,14 +96,19 @@ int main() {
 
 	SkyBox skyBox(skyboxShaderProgram, "assets/gloomySkybox/", "png");
 
-	Texture texture1("assets/container.jpg");
-	Texture texture2("assets/awesomeface.png");
-
-	cout << "Textures initialised" << endl;
+	// Loading an OBJ model
+	cout << "Loading model" << endl;
+	//Model flowerPetal("assets/Flower/model/Petal.obj", shaderProgram);
+	//shared_ptr<Model> flowerPetal = make_shared<Model>("assets/Flower/model/Petal.obj", shaderProgram);
+	// Possibly check the shaders to include additional textures
+	shared_ptr<Model> flowerPetal = make_shared<Model>("assets/Flower/FlowerModel/Flower.obj", shaderProgram);
+	flowerPetal->height *= 0.2;
+	drawables.push_back(flowerPetal);
+	//shared_ptr<Model> backpack = make_shared<Model>("assets/backpack/backpack.obj", shaderProgram);
+	//drawables.push_back(backpack);
+	cout << "Loaded model" << endl;
 
 	shaderProgram.use();
-	shaderProgram.setInt("texture1", 0);
-	shaderProgram.setInt("texture2", 1);
 
 	skyboxShaderProgram.use();
 	skyboxShaderProgram.setInt("skybox", 0);
@@ -113,7 +118,7 @@ int main() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	terrainHeight(terrain->vertices, terrain->width, terrain->height);
+	camera.terrainLevel = terrainHeight(terrain->vertices, terrain->width, terrain->height, camera.Position);
 	camera.Position.y = camera.terrainLevel + camera.characterHeight;
 
 	while (!glfwWindowShouldClose(window)) {
@@ -127,16 +132,26 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		texture1.bind(GL_TEXTURE0);
-		texture2.bind(GL_TEXTURE1);
-
-		// shaderProgram.use();
-
 		glm::mat4 view{ camera.GetViewMatrix() };
 		glm::mat4 projection{ glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 1000.0f)};
 		glm::mat4 model(1.0f);
 		
-		terrainHeight(terrain->vertices, terrain->width, terrain->height);
+		camera.terrainLevel = terrainHeight(terrain->vertices, terrain->width, terrain->height, camera.Position);
+
+
+		// Rendering the flower here for now
+		shaderProgram.use();
+		model = glm::translate(
+			model, glm::vec3(
+				65.0f,
+				terrainHeight(terrain->vertices, terrain->width, terrain->height, glm::vec3(67.0f, 0.0f, 169.9f)) + flowerPetal->height,
+				160.0f)
+		);
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+		shaderProgram.setMat4("view", view);
+		shaderProgram.setMat4("projection", projection);
+		shaderProgram.setMat4("model", model);
+		model = glm::mat4(1.0f);
 
 		terrainShaderProgram.use();
 		terrainShaderProgram.setMat4("view", view);
@@ -221,9 +236,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-inline void terrainHeight(const vector<float>& vertices, float width, float height) {
-	glm::vec3 camPos{ camera.Position };
-	int vertX{ static_cast<int>(camPos.x + height / 2.0f) };
-	int vertZ{ static_cast<int>(camPos.z + width / 2.0f) };
-	camera.terrainLevel = vertices[(vertX * width + vertZ) * 3 + 1];
+inline float terrainHeight(const vector<float>& vertices, float width, float height, const glm::vec3& position) {
+	int vertX{ static_cast<int>(position.x + height / 2.0f) };
+	int vertZ{ static_cast<int>(position.z + width / 2.0f) };
+	return vertices[(vertX * width + vertZ) * 3 + 1];
 }

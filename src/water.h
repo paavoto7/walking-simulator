@@ -13,7 +13,7 @@ class Water: public GameObject {
 public:
 	std::vector<float> vertices;
 
-	Water(std::vector<float> vertices): vertices(vertices) {
+	Water(std::vector<float> vertices): vertices(vertices), vertexCount(vertices.size() / 5) {
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
 
@@ -39,11 +39,12 @@ public:
 
 	void draw() override {
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 		glBindVertexArray(0);
 	}
 private:
 	GLuint VAO, VBO;
+	int vertexCount;
 };
 
 #endif // !WATER_H

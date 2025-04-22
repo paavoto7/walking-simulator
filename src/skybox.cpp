@@ -74,7 +74,6 @@ SkyBox::~SkyBox() {
 
 void SkyBox::draw() {
     glDepthFunc(GL_LEQUAL);
-
     shader.use();
     glBindVertexArray(VAO);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);

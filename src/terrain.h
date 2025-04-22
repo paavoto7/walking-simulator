@@ -10,6 +10,7 @@
 #include "game_object.h"
 #include "shader.h"
 
+// Generates the terrain from a heightmap
 class Terrain: public GameObject {
 public:
 	int width, height, nrChannels;
@@ -45,6 +46,7 @@ public:
 
 	void draw() override {
 		glBindVertexArray(groundVAO);
+		// Loop over the strips to draw the terrain
 		for (unsigned strip = 0; strip < NUM_STRIPS; ++strip) {
 			glDrawElements(
 				GL_TRIANGLE_STRIP,
@@ -73,6 +75,7 @@ public:
 
 				unsigned char y = *texel;
 
+				// Centered at (0,y,0)
 				vertices.push_back(-height / 2.0f + i); // x
 				vertices.push_back(static_cast<int>(y) * yScale - yShift); // y
 				vertices.push_back(-width / 2.0f + j); // z
@@ -83,12 +86,14 @@ public:
 
 		stbi_image_free(heightMapData);
 
+		// Strip rendering goes over two rows at a time, therefore:
 		NUM_STRIPS = height - 1;
 		NUM_VERTS_PER_STRIP = width * 2;
 
 		for (unsigned i = 0; i < NUM_STRIPS; ++i) {
 			for (unsigned j = 0; j < width; ++j) {
 				for (unsigned k = 0; k < 2; ++k) {
+					// One from current row, one from next
 					indices.push_back(j + width * (i + k));
 				}
 			}

@@ -1,11 +1,28 @@
 #include "model.h"
 
+#include <iostream>
+
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 Model::Model(const std::string& path, Shader& shader) : shader(shader) {
+	loadModel(path);
+}
+
+Model::Model(const std::string& path, Shader& shader, const glm::vec3& position)
+	: shader(shader)
+{
+	Position = position;
 	loadModel(path);
 }
 
 void Model::draw() {
 	shader.use();
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), Position);
+	model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+	shader.setMat4("model", model);
 	for (auto& mesh : meshes) {
 		mesh.draw(shader);
 	}

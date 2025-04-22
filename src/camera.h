@@ -3,7 +3,6 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum Camera_Movement {
@@ -13,16 +12,6 @@ enum Camera_Movement {
     RIGHT,
     SPACE
 };
-
-const float YAW{ -90.0f };
-const float PITCH{};
-const float SPEED{ 20.5f };
-const float SENSITIVITY{ 0.1f };
-const float ZOOM{ 45.0f };
-const bool flyingCamera{ false };
-const float CHARACTERHEIGHT{ 4.0f };
-const float GRAVITY{ 20.0f };
-const float JUMPHEIGHT{ 6.0f };
 
 class Camera {
 public:
@@ -46,127 +35,44 @@ public:
     float terrainLevel;
 
     // constructor with vectors
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH)
-    : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
-        Position = position;
-        WorldUp = up;
-        Yaw = yaw;
-        Pitch = pitch;
-        terrainLevel = 0.0f;
-        characterHeight = CHARACTERHEIGHT;
-        jumpShift = JUMPHEIGHT;
-        updateCameraVectors();
-    }
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH);
     // constructor with scalar values
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
-    : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
-        Position = glm::vec3(posX, posY, posZ);
-        WorldUp = glm::vec3(upX, upY, upZ);
-        Yaw = yaw;
-        Pitch = pitch;
-        terrainLevel = 0.0f;
-        characterHeight = CHARACTERHEIGHT;
-        jumpShift = JUMPHEIGHT;
-        updateCameraVectors();
-    }
+    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
 
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
-    glm::mat4 GetViewMatrix() const {
-        return glm::lookAt(Position, Position + Front, Up);
-    }
+    glm::mat4 GetViewMatrix() const;
 
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-    void ProcessKeyboard(Camera_Movement direction, float deltaTime) {
-        glm::vec3 movementVector(0.0f);
-        if (direction == FORWARD) {
-            movementVector += Front;
-        }
-        if (direction == BACKWARD) {
-            movementVector -= Front;
-        }
-        if (direction == LEFT) {
-            movementVector -= Right;
-        }
-        if (direction == RIGHT) {
-            movementVector += Right;
-        }
-        float velocity{ MovementSpeed * deltaTime };
-        Position += movementVector * velocity;
-
-        if (direction == SPACE && !isJumping) {
-            jumpShift = JUMPHEIGHT;
-            isJumping = true;
-            Position.y += jumpShift * 1.2 * deltaTime;
-        }
-    }
+    void ProcessKeyboard(Camera_Movement direction, float deltaTime);
 
     // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true) {
-        xoffset *= MouseSensitivity;
-        yoffset *= MouseSensitivity;
-
-        Yaw += xoffset;
-        Pitch += yoffset;
-
-        // make sure that when pitch is out of bounds, screen doesn't get flipped
-        if (constrainPitch) {
-            if (Pitch > 89.0f)
-                Pitch = 89.0f;
-            else if (Pitch < -89.0f)
-                Pitch = -89.0f;
-        }
-
-        // update Front, Right and Up Vectors using the updated Euler angles
-        updateCameraVectors();
-    }
+    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
 
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-    void ProcessMouseScroll(float yoffset) {
-        Zoom -= yoffset;
-        if (Zoom < 1.0f)
-            Zoom = 1.0f;
-        else if (Zoom > 45.0f)
-            Zoom = 45.0f;
-    }
+    void ProcessMouseScroll(float yoffset);
 
     // Method for per-frame updations
-    void update(float deltatime) {
-        if (isJumping) {
-            updateJump(deltatime);
-        } else if (!flyingCamera) {
-            // Set the camera to a fixed height from the ground
-            Position.y = terrainLevel + characterHeight;
-        }
-    }
+    void update(float deltatime);
 
 private:
     float jumpShift{ 0.4f };
     bool isJumping{ false };
 
+    constexpr static float YAW{ -90.0f };
+    constexpr static float PITCH{};
+    constexpr static float SPEED{ 20.5f };
+    constexpr static float SENSITIVITY{ 0.1f };
+    constexpr static float ZOOM{ 45.0f };
+    constexpr static bool flyingCamera{ false };
+    constexpr static float CHARACTERHEIGHT{ 4.0f };
+    constexpr static float GRAVITY{ 20.0f };
+    constexpr static float JUMPHEIGHT{ 6.0f };
+
     // calculates the front vector from the Camera's (updated) Euler Angles
-    void updateCameraVectors()
-    {
-        // calculate the new Front vector
-        glm::vec3 front;
-        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        front.y = sin(glm::radians(Pitch));
-        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        Front = glm::normalize(front);
-        // also re-calculate the Right and Up vector
-        Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-        Up = glm::normalize(glm::cross(Right, Front));
-    }
+    void updateCameraVectors();
 
     // Update the jump
-    void updateJump(float deltatime) {
-        if (Position.y <= terrainLevel + characterHeight) {
-            isJumping = false;
-            Position.y = terrainLevel + characterHeight;
-        } else {
-            Position.y += jumpShift * deltatime;
-            jumpShift -= GRAVITY * deltatime;
-        }
-    }
+    void updateJump(float deltatime);
 };
 
 #endif // !CAMERA_H

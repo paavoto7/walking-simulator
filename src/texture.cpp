@@ -1,5 +1,9 @@
 #include "texture.h"
 
+#include <iostream>
+
+#include "stb_image.h"
+
 Texture::Texture(const char* filename, bool flipOnLoad, GLenum textureType) : textureType(textureType) {
 	stbi_set_flip_vertically_on_load(flipOnLoad);
 
@@ -37,6 +41,15 @@ Texture::Texture(const char* filename, bool flipOnLoad, GLenum textureType) : te
 	}
 
 	stbi_image_free(data);
+}
+
+// Used when calling from Model with texture data from Assimp models
+Texture::Texture(const char* filename, const std::string& dir, bool flipOnLoad)
+	: Texture((dir + '/' + filename).c_str(), flipOnLoad) {
+}
+
+Texture::~Texture() {
+	glDeleteTextures(1, &id);
 }
 
 Texture::Texture(Texture&& other) noexcept

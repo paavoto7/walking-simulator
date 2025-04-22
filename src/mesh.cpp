@@ -1,6 +1,12 @@
 #include "mesh.h"
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned> indices, std::vector<std::shared_ptr<Texture>> textures)
+#include <string>
+
+Mesh::Mesh(
+	const std::vector<Vertex>& vertices,
+	const std::vector<unsigned>& indices,
+	const std::vector<std::shared_ptr<Texture>>& textures
+) 
 	: vertices(vertices), indices(indices), textures(textures)
 {
 	setupMesh();

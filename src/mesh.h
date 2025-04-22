@@ -1,11 +1,10 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include <string>
 #include <vector>
+#include <memory>
 
 #include <glad/glad.h>
-#include <glm/glm.hpp>
 
 #include "shader.h"
 #include "texture.h"
@@ -24,7 +23,11 @@ public:
 	std::vector<unsigned int> indices;
 	std::vector<std::shared_ptr<Texture>> textures;
 
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned> indices, std::vector<std::shared_ptr<Texture>> textures);
+	Mesh(
+		const std::vector<Vertex>& vertices,
+		const std::vector<unsigned>& indices,
+		const std::vector<std::shared_ptr<Texture>>& textures
+	);
 
 	// Disallow copying to avoid destructor problems
 	Mesh(const Mesh&) = delete;

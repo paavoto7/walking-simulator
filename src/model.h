@@ -3,10 +3,11 @@
 
 #include <vector>
 #include <string>
+#include <limits>
+#include <memory>
 
-#include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#include <glm/glm.hpp>
 
 #include "mesh.h"
 #include "texture.h"
@@ -16,9 +17,12 @@
 // Class for the models loaded with Assimp
 class Model: public GameObject {
 public:
+	glm::vec3 Position{ glm::vec3(0.0f, 0.0f, 0.0f) };
 	float height;
 
 	Model(const std::string& path, Shader& shader);
+
+	Model(const std::string& path, Shader& shader, const glm::vec3& position);
 
 	void draw() override;
 

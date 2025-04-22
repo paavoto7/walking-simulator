@@ -2,11 +2,9 @@
 #define TEXTURE_H
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 
 #include <string>
 
-#include "stb_image.h"
 #include "shader.h"
 
 class Texture {
@@ -18,8 +16,7 @@ public:
 	Texture(const char* filename, bool flipOnLoad = true, GLenum textureType = GL_TEXTURE_2D);
 
 	// Used when calling from Model with texture data from Assimp models
-	Texture(const char* filename, const std::string& dir, bool flipOnLoad = true)
-		: Texture((dir + '/' + filename).c_str(), flipOnLoad) {}
+	Texture(const char* filename, const std::string& dir, bool flipOnLoad = true);
 
 
 	// Move constructor
@@ -32,9 +29,7 @@ public:
 	Texture(const Texture&) = delete;
 	Texture& operator=(const Texture&) = delete;
 
-	~Texture() {
-		glDeleteTextures(1, &id);
-	}
+	~Texture();
 
 	void bind(GLenum option) const;
 

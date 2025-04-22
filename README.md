@@ -14,10 +14,17 @@ The features are still very rudimentary, but I hope I can make a nice little wal
 
 ## Tools used
 - Git
-- Cmake
 - Visual Studio 2022
+- Cmake
+- Blender
 
-### Changes to be made
-1. Seperate the code from h files to cpp source files
-1. Import a model succesfully
-1. Implement better water
+### Backlog
+1. Implement better water (Textures, physics etc.)
+1. Implement instanced rendering for models and randomly assign positions
+1. Make the movement more natural i.e. better gravity and momentum
+1. Add textures to ground
+1. Make more models e.g. trees, houses, rocks in Blender
+1. Make models draw colours as well
+1. Maybe add procedural terrain generation with e.g. Perlin noise
+1. Maybe add NPCs. Will require some basic AI (state machine, behavior tree etc.), basic skeletal modeling
+	and possible animations.

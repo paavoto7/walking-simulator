@@ -1,4 +1,6 @@
+#include <iostream>
 #include <vector>
+#include <random>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -6,7 +8,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "stb_image.h"
 #include "shader.h"
 #include "camera.h"
 #include "terrain.h"
@@ -20,13 +21,15 @@ using namespace std;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-void processInput(GLFWwindow* window);
+inline void processInput(GLFWwindow* window);
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-inline float terrainHeight(const vector<float>& vertices, float width, float height, const glm::vec3& position);
+inline float terrainHeight(const vector<float>& vertices, int width, int height, const glm::vec3& position);
+
+inline glm::vec3 randomPosition(const vector<float>& vertices, int width, int height);
 
 constexpr int WIDTH{ 1920 };
 constexpr int HEIGHT{ 1080 };
@@ -98,14 +101,13 @@ int main() {
 
 	// Loading an OBJ model
 	cout << "Loading model" << endl;
-	//Model flowerPetal("assets/Flower/model/Petal.obj", shaderProgram);
-	//shared_ptr<Model> flowerPetal = make_shared<Model>("assets/Flower/model/Petal.obj", shaderProgram);
-	// Possibly check the shaders to include additional textures
-	shared_ptr<Model> flowerPetal = make_shared<Model>("assets/Flower/FlowerModel/Flower.obj", shaderProgram);
-	flowerPetal->height *= 0.2;
-	drawables.push_back(flowerPetal);
-	//shared_ptr<Model> backpack = make_shared<Model>("assets/backpack/backpack.obj", shaderProgram);
-	//drawables.push_back(backpack);
+	shared_ptr<Model> flower = make_shared<Model>("assets/Flower/FlowerModel/Flower.obj", shaderProgram, glm::vec3(
+		65.0f,
+		terrainHeight(terrain->vertices, terrain->width, terrain->height, glm::vec3(65.0f, 0.0f, 160.f)),
+		160.0f));
+	flower->height *= 0.2f;
+	flower->Position.y += flower->height;
+	drawables.push_back(flower);
 	cout << "Loaded model" << endl;
 
 	shaderProgram.use();
@@ -138,19 +140,10 @@ int main() {
 		
 		camera.terrainLevel = terrainHeight(terrain->vertices, terrain->width, terrain->height, camera.Position);
 
-
 		// Rendering the flower here for now
 		shaderProgram.use();
-		model = glm::translate(
-			model, glm::vec3(
-				65.0f,
-				terrainHeight(terrain->vertices, terrain->width, terrain->height, glm::vec3(67.0f, 0.0f, 169.9f)) + flowerPetal->height,
-				160.0f)
-		);
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
 		shaderProgram.setMat4("view", view);
 		shaderProgram.setMat4("projection", projection);
-		shaderProgram.setMat4("model", model);
 		model = glm::mat4(1.0f);
 
 		terrainShaderProgram.use();
@@ -187,7 +180,7 @@ int main() {
 	return 0;
 }
 
-void processInput(GLFWwindow* window) {
+inline void processInput(GLFWwindow* window) {
 	static constexpr float change{ 0.001f };
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
@@ -216,14 +209,14 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	if (firstMouse) {
-		lastX = xpos;
-		lastY = ypos;
+		lastX = static_cast<float>(xpos);
+		lastY = static_cast<float>(ypos);
 		firstMouse = false;
 	}
 	float xoffset{ static_cast<float>(xpos - lastX) };
 	float yoffset{ static_cast<float>(lastY - ypos) };
-	lastX = xpos;
-	lastY = ypos;
+	lastX = static_cast<float>(xpos);
+	lastY = static_cast<float>(ypos);
 
 	static constexpr float sensitivity{ 0.2f };
 	xoffset *= sensitivity;
@@ -236,8 +229,23 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-inline float terrainHeight(const vector<float>& vertices, float width, float height, const glm::vec3& position) {
+inline float terrainHeight(const vector<float>& vertices, int width, int height, const glm::vec3& position) {
 	int vertX{ static_cast<int>(position.x + height / 2.0f) };
 	int vertZ{ static_cast<int>(position.z + width / 2.0f) };
 	return vertices[(vertX * width + vertZ) * 3 + 1];
+}
+
+inline int randGen(int min = 0, int max = 100) {
+	// static as they don't change
+	static random_device rd;
+	static mt19937 gen(rd());
+	// We might need different ranges so now this is non-static
+	uniform_int_distribution<int> dist(min, max);
+	return dist(gen);
+}
+
+inline glm::vec3 randomPosition(const vector<float>& vertices, int width, int height) {
+	glm::vec3 pos(randGen(0, height), 0.0f, randGen(0, width));
+	pos.y = terrainHeight(vertices, width, height, pos);
+	return pos;
 }

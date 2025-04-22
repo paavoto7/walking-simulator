@@ -1,4 +1,7 @@
 #include "skybox.h"
+
+#include <iostream>
+
 #include "stb_image.h"
 
 SkyBox::SkyBox(Shader& shader, const std::string& path, const std::string& format): shader(shader) {

@@ -19,6 +19,7 @@ The features are still very rudimentary, but I hope I can make a nice little wal
 - Blender
 
 ### Backlog
+1. Improve encapsulation of member variables i.e. introduce getters and setters
 1. Implement better water (Textures, physics etc.)
 1. Implement instanced rendering for models and randomly assign positions
 1. Make the movement more natural i.e. better gravity and momentum

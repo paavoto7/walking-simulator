@@ -1,13 +1,12 @@
 #include <iostream>
 #include <vector>
-#include <random>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
+#include "terrainUtils.h"
 #include "shader.h"
 #include "camera.h"
 #include "terrain.h"
@@ -16,6 +15,7 @@
 #include "game_object.h"
 #include "water.h"
 #include "skybox.h"
+#include "instancedModel.h"
 
 using namespace std;
 
@@ -27,12 +27,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-inline float terrainHeight(const vector<float>& vertices, int width, int height, const glm::vec3& position);
-
-inline glm::vec3 randomPosition(const vector<float>& vertices, int width, int height);
-
 constexpr int WIDTH{ 1920 };
 constexpr int HEIGHT{ 1080 };
+const bool fullscreen{ false };
 
 //Camera camera(glm::vec3(0.0f, 100.0f, 3.0f));
 Camera camera(glm::vec3(67.0f, 227.5f, 169.9f));
@@ -50,7 +47,21 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Walking simulator", nullptr, nullptr);
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+	GLFWwindow* window;
+	if (fullscreen) {
+		// Doing this makes the the fullscreen switch a lot faster
+		glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+		glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+		glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+		glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+		window = glfwCreateWindow(mode->width, mode->height, "Walking simulator", monitor, nullptr);
+	} else {
+		window = glfwCreateWindow(WIDTH, HEIGHT, "Walking simulator", nullptr, nullptr);
+	}
+	
 	if (window == nullptr) {
 		cout << "Failed to create GLFW window" << endl;
 		glfwTerminate();
@@ -70,6 +81,7 @@ int main() {
 	Shader shaderProgram("./shaders/vertex.glsl", "./shaders/fragment.glsl");
 	Shader terrainShaderProgram("./shaders/terrainVertex.glsl", "./shaders/terrainFragment.glsl");
 	Shader skyboxShaderProgram("./shaders/skyboxVertex.glsl", "./shaders/skyboxFragment.glsl");
+	Shader instancedShaderProgram("./shaders/instancedVertex.glsl", "./shaders/fragment.glsl");
 	cout << "Shaders initialised" << endl;
 
 	// Easily draw/render the objects
@@ -99,18 +111,10 @@ int main() {
 
 	SkyBox skyBox(skyboxShaderProgram, "assets/gloomySkybox/", "png");
 
-	// Loading an OBJ model
-	cout << "Loading model" << endl;
-	shared_ptr<Model> flower = make_shared<Model>("assets/Flower/FlowerModel/Flower.obj", shaderProgram, glm::vec3(
-		65.0f,
-		terrainHeight(terrain->vertices, terrain->width, terrain->height, glm::vec3(65.0f, 0.0f, 160.f)),
-		160.0f));
-	flower->height *= 0.2f;
-	flower->Position.y += flower->height;
-	drawables.push_back(flower);
-	cout << "Loaded model" << endl;
+	Model flower("assets/Flower/Flower/Flower.obj", instancedShaderProgram);
+	flower.height *= 0.2f;
 
-	shaderProgram.use();
+	InstancedModel flowerField(instancedShaderProgram, flower, terrain, 1000);
 
 	skyboxShaderProgram.use();
 	skyboxShaderProgram.setInt("skybox", 0);
@@ -120,7 +124,7 @@ int main() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	camera.terrainLevel = terrainHeight(terrain->vertices, terrain->width, terrain->height, camera.Position);
+	camera.terrainLevel = TerrainUtils::terrainHeight(terrain->vertices, terrain->width, terrain->height, camera.Position);
 	camera.Position.y = camera.terrainLevel + camera.characterHeight;
 
 	while (!glfwWindowShouldClose(window)) {
@@ -138,7 +142,7 @@ int main() {
 		glm::mat4 projection{ glm::perspective(glm::radians(camera.Zoom), (float)WIDTH/(float)HEIGHT, 0.1f, 1000.0f)};
 		glm::mat4 model(1.0f);
 		
-		camera.terrainLevel = terrainHeight(terrain->vertices, terrain->width, terrain->height, camera.Position);
+		camera.terrainLevel = TerrainUtils::terrainHeight(terrain->vertices, terrain->width, terrain->height, camera.Position);
 
 		// Rendering the flower here for now
 		shaderProgram.use();
@@ -157,6 +161,12 @@ int main() {
 			game_object->draw();
 		}
 
+		// Draw the flowers
+		instancedShaderProgram.use();
+		instancedShaderProgram.setMat4("view", view);
+		instancedShaderProgram.setMat4("projection", projection);
+		flowerField.draw();
+
 		skyboxShaderProgram.use();
 		skyboxShaderProgram.setMat4("projection", projection);
 		// Remove the translation effect so that the skybox is always around camera/player
@@ -169,13 +179,10 @@ int main() {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-	
-	glDeleteProgram(shaderProgram.ID);
-	glDeleteProgram(terrainShaderProgram.ID);
-	glDeleteProgram(skyboxShaderProgram.ID);
 
 	cout << "Reached the end" << endl;
 
+	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
 }
@@ -227,25 +234,4 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	camera.ProcessMouseScroll(static_cast<float>(yoffset));
-}
-
-inline float terrainHeight(const vector<float>& vertices, int width, int height, const glm::vec3& position) {
-	int vertX{ static_cast<int>(position.x + height / 2.0f) };
-	int vertZ{ static_cast<int>(position.z + width / 2.0f) };
-	return vertices[(vertX * width + vertZ) * 3 + 1];
-}
-
-inline int randGen(int min = 0, int max = 100) {
-	// static as they don't change
-	static random_device rd;
-	static mt19937 gen(rd());
-	// We might need different ranges so now this is non-static
-	uniform_int_distribution<int> dist(min, max);
-	return dist(gen);
-}
-
-inline glm::vec3 randomPosition(const vector<float>& vertices, int width, int height) {
-	glm::vec3 pos(randGen(0, height), 0.0f, randGen(0, width));
-	pos.y = terrainHeight(vertices, width, height, pos);
-	return pos;
 }

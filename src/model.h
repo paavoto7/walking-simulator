@@ -17,7 +17,9 @@
 // Class for the models loaded with Assimp
 class Model: public GameObject {
 public:
+	std::vector<Mesh> meshes;
 	glm::vec3 Position{ glm::vec3(0.0f, 0.0f, 0.0f) };
+	std::vector<std::shared_ptr<Texture>> loadedTextures;
 	float height;
 
 	Model(const std::string& path, Shader& shader);
@@ -28,10 +30,8 @@ public:
 
 private:
 	Shader& shader; // Main function is the owner as of now
-	std::vector<Mesh> meshes;
 	std::string directory;
 	// Using pointers to properly share them between meshes
-	std::vector<std::shared_ptr<Texture>> loadedTextures;
 
 	float maxY = std::numeric_limits<float>::lowest();
 	float minY = std::numeric_limits<float>::max();

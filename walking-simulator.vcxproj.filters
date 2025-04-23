@@ -48,6 +48,9 @@
     <ClCompile Include="src\water.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\instancedModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.h">
@@ -77,6 +80,12 @@
     <ClInclude Include="src\skybox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\instancedModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\terrainUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment.glsl" />
@@ -86,6 +95,7 @@
     <None Include="assimp-vc143-mt.dll" />
     <None Include="shaders\skyboxFragment.glsl" />
     <None Include="shaders\skyboxVertex.glsl" />
+    <None Include="shaders\instancedVertex.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="src\random.txt" />

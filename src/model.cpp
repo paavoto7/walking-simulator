@@ -20,9 +20,6 @@ Model::Model(const std::string& path, Shader& shader, const glm::vec3& position)
 
 void Model::draw() {
 	shader.use();
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), Position);
-	model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-	shader.setMat4("model", model);
 	for (auto& mesh : meshes) {
 		mesh.draw(shader);
 	}

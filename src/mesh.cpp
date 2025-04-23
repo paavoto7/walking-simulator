@@ -82,6 +82,10 @@ void Mesh::draw(const Shader& shader) {
 	glActiveTexture(GL_TEXTURE0);
 }
 
+GLuint Mesh::getVAO() const {
+	return VAO;
+}
+
 void Mesh::setupMesh() {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);

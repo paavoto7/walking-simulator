@@ -41,6 +41,8 @@ public:
 
 	void draw(const Shader& shader);
 
+	GLuint getVAO() const;
+
 private:
 	GLuint VAO, VBO, EBO;
 

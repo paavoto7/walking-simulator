@@ -8,26 +8,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 Model::Model(const std::string& path, Shader& shader) : shader(shader) {
-	loadModel(path);
-}
-
-Model::Model(const std::string& path, Shader& shader, const glm::vec3& position)
-	: shader(shader)
-{
-	Position = position;
-	loadModel(path);
-}
-
-void Model::draw() {
-	shader.use();
-	for (auto& mesh : meshes) {
-		mesh.draw(shader);
-	}
-}
-
-// Private methods
-
-void Model::loadModel(const std::string& path) {
 	Assimp::Importer importer;
 	const aiScene* scene{ importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs) };
 
@@ -40,6 +20,19 @@ void Model::loadModel(const std::string& path) {
 	processNode(scene->mRootNode, scene);
 
 	height = maxY - minY;
+}
+
+Model::Model(const std::string& path, Shader& shader, const glm::vec3& position)
+	: Model(path, shader)
+{
+	Position = position;
+}
+
+void Model::draw() {
+	shader.use();
+	for (auto& mesh : meshes) {
+		mesh.draw(shader);
+	}
 }
 
 void Model::processNode(aiNode* node, const aiScene* scene) {
@@ -101,7 +94,7 @@ void Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 	}
 
-	meshes.push_back(Mesh(vertices, indices, textures));
+	meshes.emplace_back(vertices, indices, textures);
 }
 
 std::vector<std::shared_ptr<Texture>> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, const std::string& typeName) {

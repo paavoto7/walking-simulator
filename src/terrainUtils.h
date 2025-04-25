@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 
+// Shared functions and structs related to terrain
 namespace TerrainUtils {
 
 	// A simple min, max range wrapper

@@ -32,7 +32,8 @@ constexpr int HEIGHT{ 1080 };
 const bool fullscreen{ false };
 
 //Camera camera(glm::vec3(0.0f, 100.0f, 3.0f));
-Camera camera(glm::vec3(67.0f, 227.5f, 169.9f));
+//Camera camera(glm::vec3(67.0f, 227.5f, 169.9f));
+Camera camera(glm::vec3(-234.0f, 0.0f, 346.0f));
 
 float lastX{ WIDTH / 2 };
 float lastY{ HEIGHT / 2 };
@@ -109,12 +110,13 @@ int main() {
 	shared_ptr<Water> water = make_shared<Water>(waterVertices);
 	drawables.push_back(water);
 
-	SkyBox skyBox(skyboxShaderProgram, "assets/gloomySkybox/", "png");
+	SkyBox skyBox(skyboxShaderProgram, "assets/skybox/", "jpg");
 
 	Model flower("assets/Flower/Flower/Flower.obj", instancedShaderProgram);
-	flower.height *= 0.2f;
+	flower.height *= 0.15f;
 
-	InstancedModel flowerField(instancedShaderProgram, flower, terrain, 1000);
+	shared_ptr<InstancedModel> flowerField = make_shared<InstancedModel>(instancedShaderProgram, flower, terrain, 1000);
+	drawables.push_back(flowerField);
 
 	skyboxShaderProgram.use();
 	skyboxShaderProgram.setInt("skybox", 0);
@@ -148,7 +150,10 @@ int main() {
 		shaderProgram.use();
 		shaderProgram.setMat4("view", view);
 		shaderProgram.setMat4("projection", projection);
-		model = glm::mat4(1.0f);
+
+		instancedShaderProgram.use();
+		instancedShaderProgram.setMat4("view", view);
+		instancedShaderProgram.setMat4("projection", projection);
 
 		terrainShaderProgram.use();
 		terrainShaderProgram.setMat4("view", view);
@@ -156,16 +161,10 @@ int main() {
 		//model = glm::scale(model, glm::vec3(1.0f, 2.0f, 1.0f));
 		terrainShaderProgram.setMat4("model", model);
 
-		// I may have to rethink this when more shaders accumulate...
+		// I may have to rethink this at some point
 		for (const auto& game_object: drawables) {
 			game_object->draw();
 		}
-
-		// Draw the flowers
-		instancedShaderProgram.use();
-		instancedShaderProgram.setMat4("view", view);
-		instancedShaderProgram.setMat4("projection", projection);
-		flowerField.draw();
 
 		skyboxShaderProgram.use();
 		skyboxShaderProgram.setMat4("projection", projection);

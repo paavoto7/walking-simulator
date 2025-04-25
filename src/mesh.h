@@ -45,8 +45,6 @@ public:
 
 private:
 	GLuint VAO, VBO, EBO;
-
-	void setupMesh();
 };
 
 

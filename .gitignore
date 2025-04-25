@@ -406,5 +406,6 @@ exercises/
 stb_image.h
 glad.c
 random.txt
+presentation.md
 *.dll
 assets/

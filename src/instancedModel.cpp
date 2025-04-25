@@ -65,18 +65,25 @@ InstancedModel::~InstancedModel() {
 	glDeleteBuffers(1, &buffer);
 }
 
+// This whole method is very for-purpose and therefore needs to be changed
 void InstancedModel::generatePositions(const Range<int>& widthRange, const Range<int>& heightRange) {
 	modelMatrices = std::vector<glm::mat4>(amount, glm::mat4(1.0f));
 
 	for (int i = 0; i < amount; ++i) {
-		// Around the current location
-		glm::vec3 position(
-			TerrainUtils::randGen(heightRange.min, heightRange.max),
-			0.0f, TerrainUtils::randGen(widthRange.min, widthRange.max)
-		);
-		position.y += TerrainUtils::terrainHeight(
-			terrain->vertices, terrain->width, terrain->height, position
-		) + model.height;
+		// Get a position in the ranges provided
+		glm::vec3 position;
+		float y{ 0.0f };
+		// For now a very naive check to ensure no flower are in the water
+		while (y <= 0.0f) {
+			position = glm::vec3(
+				TerrainUtils::randGen(heightRange.min, heightRange.max),
+				0.0f,
+				TerrainUtils::randGen(widthRange.min, widthRange.max));
+
+			y = TerrainUtils::terrainHeight(
+				terrain->vertices, terrain->width, terrain->height, position) + model.height;
+		}
+		position.y += y;
 		modelMatrices[i] = glm::translate(modelMatrices[i], position);
 		modelMatrices[i] = glm::scale(modelMatrices[i], glm::vec3(0.2f, 0.2f, 0.2f));
 	}

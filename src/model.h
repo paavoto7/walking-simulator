@@ -33,10 +33,8 @@ private:
 	std::string directory;
 	// Using pointers to properly share them between meshes
 
-	float maxY = std::numeric_limits<float>::lowest();
-	float minY = std::numeric_limits<float>::max();
-
-	void loadModel(const std::string& path);
+	float maxY{ std::numeric_limits<float>::lowest() };
+	float minY{ std::numeric_limits<float>::max() };
 
 	void processNode(aiNode* node, const aiScene* scene);
 

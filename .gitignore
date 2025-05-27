@@ -399,13 +399,12 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-exercises/
 *.png
 *.jpg
 *.jpeg
 stb_image.h
 glad.c
-random.txt
-presentation.md
 *.dll
 assets/
+Include/
+Libs/

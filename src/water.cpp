@@ -1,6 +1,8 @@
 #include "water.h"
 
-Water::Water(const std::vector<float>& vertices) : vertices(vertices), vertexCount(vertices.size() / 5) {
+Water::Water(const std::vector<float> vertices, Shader& shader)
+	: vertices(vertices), vertexCount(vertices.size() / 5), shader(shader)
+{
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 
@@ -25,6 +27,7 @@ Water::~Water() {
 }
 
 void Water::draw() {
+	shader.use();
 	glBindVertexArray(VAO);
 	glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	glBindVertexArray(0);

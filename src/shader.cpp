@@ -10,8 +10,8 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 	std::ifstream vShaderFile;
 	std::ifstream fShaderFile;
 
-	vShaderFile.exceptions(std::ifstream::failbit || std::ifstream::badbit);
-	fShaderFile.exceptions(std::ifstream::failbit || std::ifstream::badbit);
+	vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
 	try {
 		vShaderFile.open(vertexPath);
@@ -58,9 +58,26 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 	glDeleteShader(fragment);
 }
 
+Shader::Shader(Shader&& other) noexcept : ID(other.ID) {
+	other.ID = 0;
+}
+
+Shader& Shader::operator=(Shader&& other) noexcept {
+	if (this != &other) {
+		// Delete the current objects buffers if they exist
+		if (ID && ID != other.ID) glDeleteProgram(ID);
+
+		ID = other.ID;
+		other.ID = 0;
+	}
+	return *this;
+}
+
 Shader::~Shader() {
-	glDeleteProgram(ID);
-	std::cout << "Deleted shader of ID: " << static_cast<int>(ID) << std::endl;
+	if (ID != 0) {
+		glDeleteProgram(ID);
+		std::cout << "Deleted shader of ID: " << ID << std::endl;
+	}
 }
 
 void Shader::use() const {

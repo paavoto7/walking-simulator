@@ -14,7 +14,7 @@ public:
 	int width, height, nrChannels;
 	std::vector<float> vertices;
 
-	Terrain();
+	Terrain(Shader& shader);
 
 	~Terrain();
 
@@ -26,6 +26,7 @@ private:
 	GLuint groundVBO;
 	GLuint groundVAO;
 	GLuint groundEBO;
+	Shader& shader;
 
 	unsigned NUM_STRIPS{};
 	unsigned NUM_VERTS_PER_STRIP{};

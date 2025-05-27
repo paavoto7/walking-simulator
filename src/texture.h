@@ -5,8 +5,6 @@
 
 #include <string>
 
-#include "shader.h"
-
 class Texture {
 public:
 	// These are for Assimp loaded textures

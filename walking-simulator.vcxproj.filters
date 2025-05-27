@@ -51,6 +51,15 @@
     <ClCompile Include="src\instancedModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\callbacks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\resource_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\camera.h">
@@ -86,6 +95,15 @@
     <ClInclude Include="src\terrainUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\callbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\resource_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment.glsl" />
@@ -96,8 +114,5 @@
     <None Include="shaders\skyboxFragment.glsl" />
     <None Include="shaders\skyboxVertex.glsl" />
     <None Include="shaders\instancedVertex.glsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="src\random.txt" />
   </ItemGroup>
 </Project>

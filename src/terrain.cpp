@@ -4,7 +4,7 @@
 
 #include "stb_image.h"
 
-Terrain::Terrain() {
+Terrain::Terrain(Shader& shader): shader(shader) {
 	loadHeightMap();
 	if (vertices.empty()) return;
 
@@ -33,6 +33,7 @@ Terrain::~Terrain() {
 }
 
 void Terrain::draw() {
+	shader.use();
 	glBindVertexArray(groundVAO);
 	// Loop over the strips to draw the terrain
 	for (unsigned strip = 0; strip < NUM_STRIPS; ++strip) {
